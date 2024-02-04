@@ -1,0 +1,33 @@
+<expression> ::= <comp> | <comp> + <comp>
+<comp> ::= <subcomp>[\I | \O{number}]
+<subcomp> ::= <group> | <letter>
+<group> ::= (<letter>) | (<OR>)
+<OR> ::= <char> + <char>
+<count> ::= <letter> '{' <number>'}'
+<letter> ::= <char> | <dot> | <star>
+---------------------------------------------------------
+<RE> ::= <simple-RE>
+<simple-RE>	::=  concatenation> | <basic-RE>
+<concatenation> ::= <basic-RE> <simple-RE>
+<basic-RE>	::= <star> | <plus> | <count> | <elementary-RE>
+<star>	::=	<elementary-RE> "*"
+<count> ::= <elementary-Re>  "{" any number "}"
+<elementary-RE>	::=	 <character> | <group> | <any>
+<group>	::=	"(" <RE> ")"
+<any>	::=	"."
+<character>	::= any non metacharacter
+---------------------------------------------------------
+<RE> ::= <expr>
+<expr> ::= <basic-RE> | <operator>
+<basic-RE> ::= <operator> [<expr>]
+<element> ::= <basic-element> | <operator> <element>
+<basic-element> ::=  <group> | <any_char> | <character>
+<operator> ::= <repeat> | <or>| <count>| <case-insensitivity> | <capture>
+<repeat> ::=  "*" // repeat the previous element 0 or more times
+<or> ::= <basic-element> "+" <basic-element>
+<count> ::= <basic-element> "{" <number> "}"
+<case-insensitivity> ::= <basic-element> "\I"
+<capture> ::= <basic-element> "\O{number}"
+<group> ::= "(" <basic-RE> ")"
+<any_char> ::= "."
+<character> ::= any non metacharacter

@@ -1,0 +1,3 @@
+/Users/nasiralizade/Desktop/labb1_v4/cmake-build-debug/CMakeFiles/labb1_v4.dir
+/Users/nasiralizade/Desktop/labb1_v4/cmake-build-debug/CMakeFiles/edit_cache.dir
+/Users/nasiralizade/Desktop/labb1_v4/cmake-build-debug/CMakeFiles/rebuild_cache.dir
