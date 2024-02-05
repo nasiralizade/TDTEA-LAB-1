@@ -6,337 +6,287 @@ using IT = std::string::iterator;
 
 op *get_parser_tree(IT &first, IT last);
 
+
 op *parse_expr(IT &first, IT last);
 
 op *parse_basic_RE(IT &first, IT last);
+
+op *parse_element(IT &first, IT last);
+
+op *parse_basic_element(IT &first, IT last);
+
+op *parse_group(IT &first, IT last);
+
+op *parse_word(IT &first, IT last);
+
+op *parse_char(IT &first, IT last);
 
 op *parse_operator(IT &first, IT last);
 
 op *parse_repeat(IT &first, IT last);
 
-op *parse_basic_element(IT &first, IT last);
+op *parse_or(IT &first, IT last);
 
-op *parse_char(IT &first, IT last);
+op *parse_count(IT &first, IT last);
 
-op *parse_group(IT &first, IT last);
-
-op *parse_any_char(IT &first, IT last);
-
-op *parse_or_op(IT &first, IT last);
-
-op *parse_caseS(IT &first, IT last);
+op *parse_case_insensitivity(IT &first, IT last);
 
 op *parse_capture(IT &first, IT last);
 
-/*
-<RE> ::= <expr>
-<expr> ::= <basic-RE> | <operator>
-<basic-RE> ::= <operator> [<expr>]
-<operator> ::= <repeat> | <or>| <count>| <case-insensitivity> | <capture> |<basic-element>
-<repeat> ::= <basic-element> "*"
-<or> ::= <basic-element> "+" <basic-element>
-<count> ::= <basic-element> "{" <number> "}"
-<case-insensitivity> ::= <basic-element> "\I"
-<capture> ::= <basic-element> "\O{number}"
-<basic-element> ::=  <group> | <any_char> | <word>
-<group> ::= "(" <basic-RE> ")"
-<any_char> ::= "."
-<word> ::= <character> | <character> <word>
-<character> ::= any non metacharacter
- */
-
-
-// <character> ::= any non metacharacter
-
-op *parse_char(IT &first, IT last) {
-    token tk = next_token(first, last);
-    if (tk.type == tokenType::LETTER && is_valid_char(*first)) {
-        auto *c = new char_op(*first);
-        first++;
-        return c;
+void print_tree(op *pOp, const std::string &prefix = "", const std::string &children_prefix = "") {
+    if (pOp == nullptr) {
+        return;
     }
-    if (tk.type == tokenType::ANY_CHAR) {
+
+    // Print the current node's ID with the current prefix
+    std::cout << prefix << pOp->id() << std::endl;
+
+    // Process all children except the last one, adding branches and adjusting the children_prefix
+    for (size_t i = 0; i < pOp->children.size(); ++i) {
+        auto next_prefix = children_prefix + (i < pOp->children.size() - 1 ? "├── " : "└── ");
+        auto next_children_prefix = children_prefix + (i < pOp->children.size() - 1 ? "│   " : "    ");
+        print_tree(pOp->children[i], next_prefix, next_children_prefix);
+    }
+}
+
+
+int main() {
+    // Input string
+    std::string input = "lo* w.";
+    std::string x = "loo was";
+    IT first = input.begin();
+    IT last = input.end();
+    auto tree = get_parser_tree(first, last);
+
+    auto start = x.begin();
+    auto end = x.end();
+    char *first_char = &*start;
+    char *last_char = &*end;
+    auto result = tree->eval(first_char, last_char);
+    print_tree(tree);
+    if (result) {
+        std::cout << "Matched" << std::endl;
+    } else {
+        std::cout << "Not Matched" << std::endl;
+    }
+
+    return 0;
+}
+
+op *get_parser_tree(IT &first, IT last) {
+    return parse_expr(first, last);
+}
+
+// <expr> ::=  <basic-RE> "+" <expr> | <basic-RE>
+op *parse_expr(IT &first, IT last) {
+    auto lhs = parse_basic_RE(first, last);
+    if (!lhs) {
+        return nullptr;
+    }
+    token tk = next_token(first, last);
+    if (first != last && tk.type == OR_OP) {
         first++;
-        auto *any_char = new any_char_op();
-        return any_char;
+        auto right = parse_expr(first, last);
+        if (!right) {
+            return nullptr;
+        }
+        auto or_op_p = new or_op();
+        or_op_p->add(lhs);
+        or_op_p->add(right);
+        return or_op_p;
+    }
+    return lhs;
+}
+
+// <basic-RE> ::=  <element> <basic-RE> | <element>
+op *parse_basic_RE(IT &first, IT last) {
+    auto element = parse_element(first, last);
+    if (!element) {
+        return nullptr;
+    }
+    auto next_element = parse_basic_RE(first, last);
+    if (next_element) {
+        auto basic_RE_p = new basic_RE();
+        basic_RE_p->add(element);
+        basic_RE_p->add(next_element);
+        return basic_RE_p;
+    }
+    return element;
+}
+
+// <element> ::= <operator> <basic-element> | <basic-element>
+op *parse_element(IT &first, IT last) {
+    auto start = first;
+    auto op = parse_operator(first, last);
+    if (op) {
+        auto basic_element = parse_basic_element(first, last);
+        if (!basic_element) {
+            return op;
+        }
+        auto element = new element_op();
+        element->add(op);
+        element->add(basic_element);
+        return element;
+    }
+    first = start;
+    return parse_basic_element(first, last);
+}
+
+// <operator> ::= <repeat> | <or> | <count> | <case-insensitivity> | <capture>
+op *parse_operator(IT &first, IT last) {
+    auto start = first;
+    auto repeat = parse_repeat(first, last);
+    if (repeat) {
+        return repeat;
+    }
+    first = start;
+    auto or_op = parse_or(first, last);
+    if (or_op) {
+        return or_op;
+    }
+    first = start;
+    auto count = parse_count(first, last);
+    if (count) {
+        return count;
+    }
+    first = start;
+    auto case_insensitivity = parse_case_insensitivity(first, last);
+    if (case_insensitivity) {
+        return case_insensitivity;
+    }
+    first = start;
+    return parse_capture(first, last);
+}
+
+op *parse_capture(IT &first, IT last) {
+    token tk = next_token(first, last);
+    if (first != last && tk.type == OUTPUT_GROUP) {
+        std::advance(first, 3); // skip \O{
+        std::string number;
+        while (first != last && next_token(first, last).type != R_BRACKET) {
+            number += next_token(first, last).text;
+            first++;
+        }
+        if (next_token(first, last).type != R_BRACKET) {
+            return nullptr;
+        }
+        first++;
+        return new capture_group_op(std::stoi(number));
     }
     return nullptr;
 }
 
-op *parse_group(IT &first, IT last) {
-    auto start = first;
+op *parse_case_insensitivity(IT &first, IT last) {
     token tk = next_token(first, last);
-    if (tk.type != tokenType::L_PAR) {
-        return nullptr;
+    if (first != last && tk.type == IGNORE) {
+        first++;
+        first++;
+        return new case_sensitive_op();
     }
-    first++;
-    auto *expr = parse_basic_RE(first, last);
-    tk = next_token(first, last);
-    if (tk.type != tokenType::R_PAR) {
-        first = start;
-        std::cerr << "Error:  expected ')' in group \n";
-        return nullptr;
-    }
-    first++;
-    auto *group = new group_op();
-    group->add(expr);
-    return group;
+    return nullptr;
 }
 
-op *parse_any_char(IT &first, IT last) {
-    token tk = next_token(first, last);
-    if (tk.type != tokenType::ANY_CHAR) {
+op *parse_count(IT &first, IT last) {
+    if (first == last || next_token(first, last).type != L_BRACKET) {
         return nullptr;
     }
     first++;
-    auto *any_char = new any_char_op();
-    return any_char;
+    std::string number;
+    while (first != last && next_token(first, last).type != R_BRACKET) {
+        number += next_token(first, last).text;
+        first++;
+    }
+    if (next_token(first, last).type != R_BRACKET) {
+        return nullptr;
+    }
+    first++;
+    return new count_op(std::stoi(number));
 }
 
-// <word> ::= <character> | <character> <word>
+op *parse_or(IT &first, IT last) {
+    if (first != last && next_token(first, last).type == OR_OP) {
+        first++;
+        return new or_op();
+    }
+    return nullptr;
+}
+
+op *parse_repeat(IT &first, IT last) {
+    token tk = next_token(first, last);
+    auto prev = first - 1;
+    if (first != last && tk.type == MULTI_OP) {
+        first++;
+        auto repeat = new repeat_op();
+        repeat->add(parse_basic_element(prev, last));
+        return repeat;
+    }
+    return nullptr;
+}
+
+// <basic-element> ::= <group> | <word>
+op *parse_basic_element(IT &first, IT last) {
+    auto group = parse_group(first, last);
+    if (group) {
+        return group;
+    }
+    return parse_word(first, last);
+}
+
+// <word> ::= <word-char> <word-char>
 op *parse_word(IT &first, IT last) {
     auto start = first;
     auto word = new word_op();
     while (first != last) {
         auto c = parse_char(first, last);
-        if (!c) {
+        if (c) {
+            word->add(c);
+        } else {
             break;
         }
-        word->add(c);
+
     }
     if (!word->children.empty()) {
         return word;
     }
-    first = start;
     delete word;
-    return nullptr;
+    return nullptr;  // return nullptr if less than two characters were parsed
 }
 
-// <basic-element> ::=  <group> | <word> |
-op *parse_basic_element(IT &first, IT last) {
+op *parse_char(IT &first, IT last) {
     auto start = first;
-    auto group_any_char_word = parse_group(first, last);
-    if (!group_any_char_word) {
-        group_any_char_word = parse_word(first, last);
-        if (!group_any_char_word) {
-            first = start;
-            return nullptr;
-        }
-    }
-    return group_any_char_word;
-}
-
-// <repeat> ::= <basic-element> "*"
-op *parse_repeat(IT &first, IT last) { // TODO: fix
-    auto start = first;
-    auto basic_element = parse_basic_element(first, last);
     token tk = next_token(first, last);
-    if (!basic_element) {
-        first = start;
-        return nullptr;
-    }
-
-    if (tk.type != tokenType::MULTI_OP) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    auto star = new repeat_op();
-    star->add(basic_element);
-    return star;
-}
-
-// <or> ::= <basic-element> "+" <basic-element>
-op *parse_or_op(IT &first, IT last) {
-    auto start = first;
-    auto lhs = parse_basic_element(first, last);
-    if (!lhs) {
-        return nullptr;
-    }
-    token tk = next_token(first, last);
-    if (tk.type != tokenType::OR_OP) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    auto rhs = parse_basic_element(first, last);
-    if (!rhs) {
-        first = start;
-        return nullptr;
-    }
-    auto or_op_p = new or_op();
-    or_op_p->add(lhs);
-    or_op_p->add(rhs);
-    return or_op_p;
-}
-
-// <case-insensitivity> ::= <basic-element> "\I"
-op *parse_caseS(IT &first, IT last) {
-    auto start = first;
-    auto *basic_element = parse_basic_element(first, last);
-    if (!basic_element) {
-        first = start;
-        return nullptr;
-    }
-    token tk = next_token(first, last);
-    if (tk.type != tokenType::IGNORE) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    first++;
-    auto caseS = new case_sensitive_op();
-    caseS->add(basic_element);
-    return caseS;
-}
-
-// <capture> ::= <basic-element> "\O{number}"
-op *parse_capture(IT &first, IT last) {
-    auto start = first;
-    auto *basic_element = parse_basic_element(first, last);
-    if (!basic_element) {
-        first = start;
-        return nullptr;
-    }
-    token tk = next_token(first, last);
-    if (tk.type != tokenType::OUTPUT_GROUP) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    first++;
-    tk = next_token(first, last);
-    if (tk.type != tokenType::L_BRACKET) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    tk = next_token(first, last);
-    if (tk.type != tokenType::LETTER) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    tk = next_token(first, last);
-    int number = std::stoi(tk.text);
-    if (tk.type != tokenType::R_BRACKET) {
-        first = start;
-        return nullptr;
-    }
-    first++;
-    auto capture1 = new capture_group_op(number);
-    capture1->add(basic_element);
-    return capture1;
-}
-
-op *parse_count(IT &first, IT last) {
-    token tk = next_token(first, last);
-    if (tk.type != tokenType::L_BRACKET) {
-        return nullptr;
-    }
-    first++;
-    tk = next_token(first, last);
-    if (tk.type != tokenType::LETTER) {
-        return nullptr;
-    }
-    std::string number;
-    while (tk.type == tokenType::LETTER) {
-        number += tk.text;
+    if (tk.type == LETTER) {
+        auto c = new char_op(tk.text[0]);
         first++;
-        tk = next_token(first, last);
+        return c;
     }
-    if (tk.type != tokenType::R_BRACKET) {
-        return nullptr;
+    if (tk.type == ANY_CHAR) {
+        auto c = new any_char_op();
+        first++;
+        return c;
     }
-    first++;
-    auto count = new count_op(std::stoi(number));
-    return count;
 
-}
-
-// <operator> ::= <repeat> | <or>| <count>| <case-insensitivity> | <capture> |<basic-element>
-// repeat =star
-op *parse_operator(IT &first, IT last) {
-    auto start = first;
-    auto repeat_or_count_caseS_cap_elem = parse_repeat(first, last);
-    if (!repeat_or_count_caseS_cap_elem) {
-        repeat_or_count_caseS_cap_elem = parse_or_op(first, last);
-        if (!repeat_or_count_caseS_cap_elem) {
-            repeat_or_count_caseS_cap_elem = parse_count(first, last);
-            if (!repeat_or_count_caseS_cap_elem) {
-                repeat_or_count_caseS_cap_elem = parse_caseS(first, last);
-                if (!repeat_or_count_caseS_cap_elem) {
-                    repeat_or_count_caseS_cap_elem = parse_capture(first, last);
-                    if (!repeat_or_count_caseS_cap_elem) {
-                        repeat_or_count_caseS_cap_elem = parse_basic_element(first, last);
-                        if (!repeat_or_count_caseS_cap_elem) {
-                            first = start;
-                            return nullptr;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return repeat_or_count_caseS_cap_elem;
-}
-
-// <basic-RE> ::= <operator> [<expr>]
-op *parse_basic_RE(IT &first, IT last) {
-    auto op = parse_operator(first, last);
-    if (first != last) {
-        auto expr= parse_expr(first, last);
-        if (op) {
-            auto pragma = new program();
-            pragma->add(op);
-            pragma->add(expr);
-            return pragma;
-        }
-    }
-    return op;
-}
-
-// <expr> ::= <basic-RE> | <operator>
-op *parse_expr(IT &first, IT last) {
-    auto *basic_RE = parse_basic_RE(first, last);
-    if (basic_RE) {
-        return basic_RE;
-    }
-    auto *op = parse_operator(first, last);
-    if (op) {
-        return op;
-    }
     return nullptr;
 }
 
-//<RE> ::= <expr>
-op *get_parser_tree(IT &first, IT last) {
-    auto expr = parse_expr(first, last);
-    auto *p = new program();
-    p->add(expr);
-    return p;
-}
-
-int main() {
-    // Input string
-    std::string input = "l*";
-    auto first = input.begin();
-    auto last = input.end();
-    std::string text = "Waterloo I was defeated, you won the war Waterloo promise to love you for ever more Waterloo couldn't escape if I wanted to Waterloo knowing my fate is to be with you Waterloo finally facing my Waterloo";
-    std::string text1 = "abcdefg";
-    // Create the parser tree
-    auto tree = get_parser_tree(first, last);
-    char *begin = &*text.begin();
-    char *end = &*text.end();
-    // Evaluate the input against the regular expression
-    if (tree->eval(begin, end)) {
-        std::cout << "The input matches the regular expression." << std::endl;
-    } else {
-        std::cout << "The input does not match the regular expression." << std::endl;
+// <group> ::= "(" <expr> ")"
+op *parse_group(IT &first, IT last) {
+    auto start = first;
+    token tk = next_token(first, last);
+    if (first == last || tk.type != L_PAR) {
+        return nullptr;
     }
-
-    // Cleanup (in real code, use smart pointers to manage memory automatically)
-
-
-    return 0;
+    first++;
+    auto expr = parse_expr(first, last);
+    if (!expr) {
+        return nullptr;
+    }
+    tk = next_token(first, last);
+    if (first == last || tk.type != R_PAR) {
+        return nullptr;
+    }
+    first++;
+    auto group = new group_op();
+    group->add(expr);
+    return group;
 }
