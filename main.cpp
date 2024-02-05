@@ -5,55 +5,26 @@
 using IT = std::string::iterator;
 
 op *get_parser_tree(IT &first, IT last);
-
-
 op *parse_expr(IT &first, IT last);
-
 op *parse_basic_RE(IT &first, IT last);
-
 op *parse_element(IT &first, IT last);
-
 op *parse_basic_element(IT &first, IT last);
-
 op *parse_group(IT &first, IT last);
-
 op *parse_word(IT &first, IT last);
-
 op *parse_char(IT &first, IT last);
-
 op *parse_operator(IT &first, IT last);
-
 op *parse_repeat(IT &first, IT last);
-
 op *parse_or(IT &first, IT last);
-
 op *parse_count(IT &first, IT last);
-
 op *parse_case_insensitivity(IT &first, IT last);
-
 op *parse_capture(IT &first, IT last);
 
-void print_tree(op *pOp, const std::string &prefix = "", const std::string &children_prefix = "") {
-    if (pOp == nullptr) {
-        return;
-    }
-
-    // Print the current node's ID with the current prefix
-    std::cout << prefix << pOp->id() << std::endl;
-
-    // Process all children except the last one, adding branches and adjusting the children_prefix
-    for (size_t i = 0; i < pOp->children.size(); ++i) {
-        auto next_prefix = children_prefix + (i < pOp->children.size() - 1 ? "├── " : "└── ");
-        auto next_children_prefix = children_prefix + (i < pOp->children.size() - 1 ? "│   " : "    ");
-        print_tree(pOp->children[i], next_prefix, next_children_prefix);
-    }
-}
 
 
 int main() {
     // Input string
-    std::string input = "lo* w.";
-    std::string x = "loo was";
+    std::string input = "(lo+be)";
+    std::string x = "loo couldn't be here";
     IT first = input.begin();
     IT last = input.end();
     auto tree = get_parser_tree(first, last);
@@ -234,7 +205,6 @@ op *parse_basic_element(IT &first, IT last) {
 
 // <word> ::= <word-char> <word-char>
 op *parse_word(IT &first, IT last) {
-    auto start = first;
     auto word = new word_op();
     while (first != last) {
         auto c = parse_char(first, last);
@@ -249,11 +219,10 @@ op *parse_word(IT &first, IT last) {
         return word;
     }
     delete word;
-    return nullptr;  // return nullptr if less than two characters were parsed
+    return nullptr;
 }
 
 op *parse_char(IT &first, IT last) {
-    auto start = first;
     token tk = next_token(first, last);
     if (tk.type == LETTER) {
         auto c = new char_op(tk.text[0]);
@@ -271,7 +240,6 @@ op *parse_char(IT &first, IT last) {
 
 // <group> ::= "(" <expr> ")"
 op *parse_group(IT &first, IT last) {
-    auto start = first;
     token tk = next_token(first, last);
     if (first == last || tk.type != L_PAR) {
         return nullptr;
