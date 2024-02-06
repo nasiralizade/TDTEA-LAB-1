@@ -49,3 +49,34 @@
 <group> ::= "(" <basic-RE> ")"
 <any_char> ::= "."
 <character> ::= any non metacharacter
+-----------------------------------------------------------------------------------------------------------------------------------------
+    <match> := <level>
+    <level> := <expressions>\O{<digit>}
+    <expressions> := <expression> | <expression><expressions> | <greedy> | <greedy><expressions>
+    <greedy> := <many><expressions> | <many><expressions>)<expressions> | <many>)<expressions> | <many>) | <many><expressions>)
+    <subexpression> := (<expressions>) | (<greedy> | (<expressions><greedy>
+    <expression> := <operand> | <either> | <many> | <count>
+    <either> := <operand>+<operand> | <operand>+<either>
+    <many> := <operand>*
+    <count> := <operand>{<digit>}
+    <ignore> := <subexpression>\I | <string>\I
+    <operand> := <ignore> | <subexpression> | <string>
+    <string> := <letter> | <wildcard> | <letter><string> | <wildcard><string>
+    <letter> := [A-Za-z ']
+    <wildcard> := .
+    -----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
