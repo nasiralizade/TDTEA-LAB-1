@@ -18,6 +18,21 @@ struct op {
     }
 };
 
+struct expr_op : op {
+    bool eval(char *&first, char *last) override {
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string id() override {
+        return "expr";
+    }
+};
+
 struct basic_RE : op {
     bool eval(char *&first, char *last) override {
         for(auto &child : children) {
@@ -34,7 +49,6 @@ struct basic_RE : op {
 
 struct element_op : basic_RE { // TODO: check this
     bool eval(char *&first, char *last) override {
-        auto start = first;
         for (auto &child: children) {
             if (!child->eval(first, last)) {
                 return false;
@@ -53,11 +67,12 @@ struct operation_op : basic_RE {
    }
 };
 struct repeat_op : operation_op {
+    /*op* child_to_repeat; // TODO: check child_to_repeat
+    repeat_op(op* child_to_repeat) : child_to_repeat(child_to_repeat) {}*/
     bool eval(char *&first, char *last) override {
         if (children.empty()) {
             return true;
         }
-        char *start = first;
         std::vector<char *> match_pos;
         while (first < last && children[0]->eval(first, last)) {
             match_pos.push_back(first);
@@ -90,11 +105,11 @@ struct capture_group_op : operation_op {
          capture_group_op(int number) : number(number) {}
         bool eval(char *&first, char *last) override {
             char *start = first;
-            if(children[0]->eval(first, last)) {
-                capture_all.push_back(std::string(start, first));
-                return true;
+            if (!children[0]->eval(first, last)) {
+                return false;
             }
-            return false;
+            capture_all.push_back(std::string(start, first));
+            return true;
         }
         std::string id() override {
             return "capture_group_op";
@@ -170,16 +185,18 @@ struct char_op : basic_element_op {
 };
 struct word_op : basic_element_op {
     bool eval(char *&first, char *last) override {
-        auto start = first;
         auto child_it = children.begin();
-        auto child = children;
+        auto start = first;
         while (child_it!= children.end() && first <= last) {
             if(!(*child_it)->eval(first, last)) {
                 child_it = children.begin();
                 first++;
-            }else child_it++;
+            } else {
+                child_it++;
+            }
         }
         if (child_it == children.end()) {
+            std::cout << "Matched word: " << std::string(start, first) << std::endl;
             return true;
         }
         return false;

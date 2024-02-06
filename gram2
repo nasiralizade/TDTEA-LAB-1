@@ -1,17 +1,40 @@
------------------------------------------
+-------------------------------------------------------------------------
+<RE> ::= <expr>                                                                                             //
+<expr> ::=  <basic-RE> "+" <basic-RE> | <basic-RE>                                //
+<basic-RE> ::=  <element> <basic-RE> | <element>                                  // element followed by a basic regular expression. This allows for concatenation of elements.
+<element> ::= <basic-element> <operator> | <basic-RE>                         // basic element followed by an operator. This allows for repetition of basic elements.
+<basic-element> ::= <group> | <word>                                                       // group or word
+<group> ::= "(" <expr> ")"                                                                              // group of regular expressions
+<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture>    // (<expr>)*,  {n}, \I, \O{number}]
+<repeat> ::= "*"                                                                                               // zero or more occurrences of the preceding element
+<or> ::= "+"                                                                                                     // or operator
+<count> ::= "{" <number> "}"                                                                         // {n} where n is a number, indicating the number of occurrences of the preceding element
+<case-insensitivity> ::= "\I"                                                                            // case insensitivity, i.e. ignore case, for the preceding element, can uppercase or lowercase
+<capture> ::= "\O{number}"                                                                           // capture the preceding element, where number is the capture group number
+<any_char> ::= "."                                                                                           // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
+<word> ::= <word-char> <word-char> | <word-char> <word>                // word character followed by a word character or a word character followed by a word
+<word-char> ::= <character> | <any_char>                                                // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
+<character> ::= any non-metacharacter                                                      // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
+
+-----------------------------------------------------------------------------------------------------------------------------------------
 <RE> ::= <expr>
-<expr> ::=  <basic-RE> "+" <expr> | <basic-RE>                                                       // Use '+' for OR operation between chains
-<basic-RE> ::= <element> | <element> <basic-RE>                                               // A chain is a sequence of units
-<element> ::= <basic-element> | <operator> <basic-element>                            // A unit is a basic element or an operator applied to a basic element
-<basic-element> ::= <group> | <word>                                                                   // Basic elements include groups or words
-<group> ::= "(" <expr> ")"                                                                                          // Grouping allows nested expressions
-<operator> ::= <repeat> | <or> | <count> | <case-insensitivity> | <capture>
-<repeat> ::= "*"                                                                                                         // Repeat the previous element 0 or more times
-<or> ::= "+"                                                                                                                // Use '+' for one or more occurrences of the previous element (consider using '|' if representing OR operation)
-<count> ::= "{" <number> "}"                                                                                   // Repeat the previous element a specific number of times
-<case-insensitivity> ::= "\I"                                                                                     // Marks the previous element as case-insensitive
-<capture> ::= "\O{number}"                                                                                     // Captures the previous element for future reference
-<any_char> ::= "."                                                                                                     // Represents any character
-<word> ::= <word-char> <word-char> | <word-char> <word>                          // A word is at least two characters or any_char
-<word-char> ::= <character> | <any_char>                                                          // word-char can be any character or any_char
-<character> ::= any non-metacharacter                                                                // Represents a specific character
+<expr> ::=  <basic-RE> <expr> | <basic-RE>
+<basic-RE> ::=  <element> <basic-RE> | <element>
+<element> ::= <basic-element> <operator> | <basic-RE>
+<basic-element> ::= <group> | <or> | <word>
+<group> ::= "(" <expr> ")"
+<or> ::= <basic-element> "+" <basic-element>
+<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture> | <or> | <group> | <any_char>
+<repeat> ::= <group>"*" | <word>"*" | <any_char>"*"
+<count> ::= "{" <number> "}"
+<case-insensitivity> ::= "\I"
+<capture> ::= "\O{number}"
+<any_char> ::= "."
+<word> ::= <word-char> <word-char> | <word-char> <word>
+<word-char> ::= <character> | <any_char>
+<character> ::= any non-metacharacter // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+
