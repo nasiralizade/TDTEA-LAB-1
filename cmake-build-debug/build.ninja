@@ -55,6 +55,12 @@ build CMakeFiles/labb1_v4.dir/main.cpp.o: CXX_COMPILER__labb1_v4_unscanned_Debug
   OBJECT_DIR = CMakeFiles/labb1_v4.dir
   OBJECT_FILE_DIR = CMakeFiles/labb1_v4.dir
 
+build CMakeFiles/labb1_v4.dir/Parse.cpp.o: CXX_COMPILER__labb1_v4_unscanned_Debug /Users/nasiralizade/Desktop/labb1_v4/Parse.cpp || cmake_object_order_depends_target_labb1_v4
+  DEP_FILE = CMakeFiles/labb1_v4.dir/Parse.cpp.o.d
+  FLAGS = -g -std=gnu++2b -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk -fcolor-diagnostics
+  OBJECT_DIR = CMakeFiles/labb1_v4.dir
+  OBJECT_FILE_DIR = CMakeFiles/labb1_v4.dir
+
 
 # =============================================================================
 # Link build statements for EXECUTABLE target labb1_v4
@@ -63,7 +69,7 @@ build CMakeFiles/labb1_v4.dir/main.cpp.o: CXX_COMPILER__labb1_v4_unscanned_Debug
 #############################################
 # Link the executable labb1_v4
 
-build labb1_v4: CXX_EXECUTABLE_LINKER__labb1_v4_Debug CMakeFiles/labb1_v4.dir/main.cpp.o
+build labb1_v4: CXX_EXECUTABLE_LINKER__labb1_v4_Debug CMakeFiles/labb1_v4.dir/main.cpp.o CMakeFiles/labb1_v4.dir/Parse.cpp.o
   FLAGS = -g -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
   OBJECT_DIR = CMakeFiles/labb1_v4.dir
   POST_BUILD = :
