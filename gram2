@@ -1,37 +1,19 @@
--------------------------------------------------------------------------
-<RE> ::= <expr>                                                                                             //
-<expr> ::=  <basic-RE> "+" <basic-RE> | <basic-RE>                                //
-<basic-RE> ::=  <element> <basic-RE> | <element>                                  // element followed by a basic regular expression. This allows for concatenation of elements.
-<element> ::= <basic-element> <operator> | <basic-RE>                         // basic element followed by an operator. This allows for repetition of basic elements.
-<basic-element> ::= <group> | <word>                                                       // group or word
-<group> ::= "(" <expr> ")"                                                                              // group of regular expressions
-<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture>    // (<expr>)*,  {n}, \I, \O{number}]
-<repeat> ::= "*"                                                                                               // zero or more occurrences of the preceding element
-<or> ::= "+"                                                                                                     // or operator
-<count> ::= "{" <number> "}"                                                                         // {n} where n is a number, indicating the number of occurrences of the preceding element
-<case-insensitivity> ::= "\I"                                                                            // case insensitivity, i.e. ignore case, for the preceding element, can uppercase or lowercase
-<capture> ::= "\O{number}"                                                                           // capture the preceding element, where number is the capture group number
-<any_char> ::= "."                                                                                           // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
-<word> ::= <word-char> <word-char> | <word-char> <word>                // word character followed by a word character or a word character followed by a word
-<word-char> ::= <character> | <any_char>                                                // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
-<character> ::= any non-metacharacter                                                      // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
-
 -----------------------------------------------------------------------------------------------------------------------------------------
 <RE> ::= <expr>
 <expr> ::=  <basic-RE> <expr> | <basic-RE>
-<basic-RE> ::=  <element> <basic-RE> | <element>
-<element> ::= <word> <operator> | <basic-RE>
+<basic-RE> ::=  <element> <or> <element> | <element>
+<element> ::= <basic-element> <operator> | <basic-element> | <operator>
+<basic-element> ::=  <group> | <word> | <any_char>
+<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture> | <any_char>
 <group> ::= "(" <expr> ")"
-<or> ::= <basic-element> "+" <basic-element>
-<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture> | <or> | <group> | <any_char>
-<repeat> ::= <group>"*" | <word>"*" | <any_char>"*"
+<or> ::= "+"
+<repeat> ::= "*"
 <count> ::= "{" <number> "}"
 <case-insensitivity> ::= "\I"
 <capture> ::= "\O{number}"
 <any_char> ::= "."
-<word> ::= <word-char> <word-char> | <word-char> <word>
-<word-char> ::= <character> | <any_char>
-<character> ::= any non-metacharacter // any character except n\,\,{,},(,),[,],\,^,,|,*,+,
+<word> ::= <char><word> | <char>
+<char>  ::= all characters except "(", ")", "{", "}", "+", "*", ".", "\";
 -----------------------------------------------------------------------------------------------------------------------------------------
 
 

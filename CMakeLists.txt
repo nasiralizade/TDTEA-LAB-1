@@ -6,5 +6,6 @@ set(CMAKE_CXX_STANDARD 23)
 add_executable(labb1_v4 main.cpp
         lexer.h
         Ops.h
-        test.h
-        parsings.h)
+        Parse.cpp
+        Parse.h
+)
