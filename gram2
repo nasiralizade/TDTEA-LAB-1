@@ -20,8 +20,7 @@
 <RE> ::= <expr>
 <expr> ::=  <basic-RE> <expr> | <basic-RE>
 <basic-RE> ::=  <element> <basic-RE> | <element>
-<element> ::= <basic-element> <operator> | <basic-RE>
-<basic-element> ::= <group> | <or> | <word>
+<element> ::= <word> <operator> | <basic-RE>
 <group> ::= "(" <expr> ")"
 <or> ::= <basic-element> "+" <basic-element>
 <operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture> | <or> | <group> | <any_char>
