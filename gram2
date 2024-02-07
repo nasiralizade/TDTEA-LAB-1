@@ -6,28 +6,3 @@ Component      ::= CHAR | '.' | '(' Pattern ')' | Pattern '\I' | Pattern '\O{' D
 CHAR    ::= Any character except special symbols (., +, *, (), {}, \I, \O)
 DIGIT   ::= [0-9]
 
-
-
-
-
------------------------------------------------------------------------------------------------------------------------------------------
-<RE> ::= <expr>
-<expr> ::=  <basic-RE> <expr> | <basic-RE>
-<basic-RE> ::=  <element> <or> <element> | <element>
-<element> ::= <basic-element> <operator> | <basic-element> | <operator>
-<basic-element> ::=  <group> | <word> | <any_char>
-<operator> ::= <repeat>  | <count> | <case-insensitivity> | <capture> | <any_char>
-<group> ::= "(" <parse_expr> ")"
-<or> ::= "+"
-<repeat> ::= "*"
-<count> ::= "{" <number> "}"
-<case-insensitivity> ::= "\I"
-<capture> ::= "\O{number}"
-<any_char> ::= "."
-<word> ::= <char><word> | <char>
-<char>  ::= all characters except "(", ")", "{", "}", "+", "*", ".", "\";
------------------------------------------------------------------------------------------------------------------------------------------
-
-
-
-
