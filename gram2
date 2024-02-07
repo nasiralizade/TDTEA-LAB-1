@@ -6,4 +6,3 @@ Component      ::= CHAR | '.' | '(' Pattern ')' | Pattern '\I' | Pattern '\O{' D
 CHAR    ::= Any character except special symbols (., +, *, (), {}, \I, \O)
 DIGIT   ::= [0-9]
 
-
