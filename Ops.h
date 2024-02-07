@@ -12,222 +12,152 @@
 struct op {
     virtual bool eval(char *&first, char *last) = 0;
     virtual std::string id() = 0;
-    std::vector<op*> children;
+
+    std::vector<op *> children;
     void add(op *child) {
         children.push_back(child);
     }
-};
 
-struct expr_op : op {
-    bool eval(char *&first, char *last) override {
+    virtual ~op() {
         for (auto &child: children) {
-            if (!child->eval(first, last)) {
-                return false;
-            }
+            delete child;
         }
-        return true;
-    }
-
-    std::string id() override {
-        return "expr";
     }
 };
 
-struct basic_RE : op {
-    bool eval(char *&first, char *last) override {
-        for(auto &child : children) {
-            if(!child->eval(first, last)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    std::string id() override {
-        return "basic_RE";
-    }
-};
+struct char_op : op {
+    char c;
 
-struct element_op : basic_RE { // TODO: check this
+    char_op(char c) : c(c) {}
     bool eval(char *&first, char *last) override {
-        for (auto &child: children) {
-            if (!child->eval(first, last)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::string id() override {
-        return "element_op";
-    }
-};
-struct operation_op : basic_RE {
-   std::string id() override {
-       return "operation_op";
-   }
-};
-struct repeat_op : operation_op {
-    /*op* child_to_repeat; // TODO: check child_to_repeat
-    repeat_op(op* child_to_repeat) : child_to_repeat(child_to_repeat) {}*/
-    bool eval(char *&first, char *last) override {
-        if (children.empty()) {
-            return true;
-        }
-        std::vector<char *> match_pos;
-        while (first < last && children[0]->eval(first, last)) {
-            match_pos.push_back(first);
-        }
-        for (auto it = match_pos.rbegin(); it != match_pos.rend(); it++) {
-            first = *it;
-        }
-        return true;
-    }
-    std::string id() override {
-        return "repeat_op";
-    }
-
-    int count;
-};
-struct case_sensitive_op : operation_op {
-        bool eval(char *&first, char *last) override {
-            if(first != last && children[0]->eval(first, last)) {
-                return true;
-            }
-            return false;
-        }
-        std::string id() override {
-            return "case_sensitive_op";
-        }
-    };
-struct capture_group_op : operation_op {
-        std::vector<std::string> capture_all;
-        int number;
-         capture_group_op(int number) : number(number) {}
-        bool eval(char *&first, char *last) override {
-            char *start = first;
-            if (!children[0]->eval(first, last)) {
-                return false;
-            }
-            capture_all.push_back(std::string(start, first));
-            return true;
-        }
-        std::string id() override {
-            return "capture_group_op";
-        }
-    };
-struct or_op : operation_op {
-    bool eval(char *&first, char *last) override {
-        auto start = first;
-        if(children[0]->eval(first, last)) {
-            return true;
-        }
-        first = start;
-        return children[1]->eval(first, last);
-    }
-    std::string id() override {
-        return "or_op";
-    }
-};
-struct count_op : operation_op {
-    int count;
-    count_op(int count) : count(count) {}
-    bool eval(char *&first, char *last) override {
-        for (int i = 0; i < count; ++i) {
-            if (!children[0]->eval(first, last)) {
-                return false;
-            }
-        }
-        return true;
-    }
-    std::string id() override {
-        return "count_op";
-    }
-};
-struct basic_element_op : operation_op {
-    std::string id() override {
-        return "basic_element_op";
-    }
-};
-struct group_op : basic_element_op {
-    bool eval(char *&first, char *last) override {
-        return children[0]->eval(first, last); // children[0] is basic_RE
-    }
-    std::string id() override {
-        return "group_op";
-    }
-};
-
-struct any_char_op : basic_element_op {
-    bool eval(char *&first, char *last) override {
-        if (first != last && *first != '\n' && *first != '\r' && *first != '\t') {
+        if (first != last && *first == c) {
             first++;
             return true;
         }
         return false;
     }
+
+    std::string id() override {
+        return "char_op";
+    }
+};
+
+struct any_char_op : op {
+    bool eval(char *&first, char *last) override {
+        if (first != last) {
+            first++;
+            return true;
+        }
+        return false;
+    }
+
     std::string id() override {
         return "any_char_op";
     }
 };
-struct char_op : basic_element_op {
-    char c;
-    char_op(char c) : c(c) {}
+
+struct or_op : op {
     bool eval(char *&first, char *last) override {
-        if(first != last && *first == c) {
-            first++;
-            return true;
-        }
-        return false;
+        char *temp = first;
+        bool lhs = children[0]->eval(temp, last);
+        if (lhs) {
+            first = temp;
+                return true;
+            }
+        return children[1]->eval(first, last);
     }
+
     std::string id() override {
-        return "char_op"  " '" + std::string(1, c) + "'";
+        return "or_op";
     }
 };
-struct word_op : basic_element_op {
+
+struct Sequence : op {
     bool eval(char *&first, char *last) override {
-        auto child_it = children.begin();
         auto start = first;
-        while (child_it!= children.end() && first <= last) {
-            if(!(*child_it)->eval(first, last)) {
-                child_it = children.begin();
-                first++;
-            } else {
-                child_it++;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
             }
         }
-        if (child_it == children.end()) {
-            std::cout << "Matched word: " << std::string(start, first) << std::endl;
-            return true;
-        }
-        return false;
+        return true;
     }
+
     std::string id() override {
-        return "word_op";
+        return "Sequence";
     }
 };
-struct program: op {
+
+struct repeat : op {
     bool eval(char *&first, char *last) override {
-        for(auto &child : children) {
-            if(!child->eval(first, last)) {
+        while (first != last && children[0]->eval(first, last)) {
+        }
+        return true;
+    }
+    std::string id() override {
+        return "repeat";
+    }
+};
+
+struct exact_op : op {
+    int n;
+
+    exact_op(int n) : n(n) {}
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (int i = 0; i < n; i++) {
+            if (!children[0]->eval(first, last)) {
+                first = start;
                 return false;
             }
         }
         return true;
     }
     std::string id() override {
-        return "program";
+        return "exact_op";
     }
 };
-struct  match_op : op {
+
+struct ignore_case_op : op {
+    op *child;
+
+    ignore_case_op(op *child) : child(child) {}
     bool eval(char *&first, char *last) override {
-        if(first == last) {
-            return false;
+        char *temp = first;
+        if (child->eval(first, last)) {
+            return true;
         }
-        return true;
+        first = temp;
+        return false;
     }
     std::string id() override {
-        return "match_op";
+        return "ignore_case_op";
     }
 };
+
+struct output_group_op : op {
+    op *child;
+    int group_index;
+    std::string matchedText;
+
+    output_group_op(op *child, int group_index) : child(child), group_index(group_index) {}
+    bool eval(char *&first, char *last) override {
+        char *temp = first;
+        if (child->eval(first, last)) {
+            matchedText.assign(temp, first);
+            return true;
+        }
+        return false;
+    }
+    std::string id() override {
+        return "output_group_op";
+    }
+
+    std::string getMatchedText() {
+        return matchedText;
+    }
+};
+
 
 #endif //LABB1_V4_OPS_H
