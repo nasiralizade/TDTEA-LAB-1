@@ -15,9 +15,22 @@ class Parse {
 public:
     Parse(IT first, IT last) : lexer(first, last) {}
 
-    op *parse_word();
+    ~Parse() = default;
 
-    op *parse_character();
+    op *parse_expr();
+
+    op *parse_sequence();
+
+    op *parse_element();
+
+    op *parse_component();
+
+    bool is_valid_char(char c);
+
+    bool match_from_any_pos(std::string &input);
+
+    std::string matchedSubstring;
+
 
 private:
     Lexer lexer;

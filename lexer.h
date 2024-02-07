@@ -73,15 +73,7 @@ public:
                 tk = {R_BRACKET, "}"};
                 break;
             case '\\':
-                if (++first != last) {
-                    if (*first == 'I') {
-                        tk = {IGNORE_CASE, "\\I"};
-                    } else if (*first == 'O') {
-                        tk = {OUTPUT_GROUP, "\\O"};
-                    } else {
-                        tk = {SLASH, "\\"};
-                    }
-                }
+                tk = {SLASH, "\\"};
                 break;
             default:
                 tk = {LETTER, std::string(first, first + 1)};

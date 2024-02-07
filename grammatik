@@ -37,7 +37,7 @@
 ---------------------------------------------------------
 <RE> ::= <expr>
 <expr> ::= <basic-RE> | <operator>
-<basic-RE> ::= <operator> [<expr>]
+<basic-RE> ::= <operator> [<parse_expr>]
 <element> ::= <basic-element> | <operator> <element>
 <basic-element> ::=  <group> | <any_char> | <character>
 <operator> ::= <repeat> | <or>| <count>| <case-insensitivity> | <capture>
