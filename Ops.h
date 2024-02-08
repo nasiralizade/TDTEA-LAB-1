@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <vector>
+#include "Parse.h"
 
 
 struct op {
@@ -17,13 +18,15 @@ struct op {
     void add(op *child) {
         children.push_back(child);
     }
-
     virtual ~op() {
         for (auto &child: children) {
             delete child;
         }
     }
 };
+
+extern int group_index_;
+extern std::vector<std::string> capturedGroups;
 
 struct char_op : op {
     char c;
@@ -122,6 +125,9 @@ struct exact_op : op {
 struct ignore_case_op : op {
     op *child;
 
+    void traverse(op *&root) {
+
+    }
     ignore_case_op(op *child) : child(child) {}
     bool eval(char *&first, char *last) override {
         char *temp = first;
@@ -136,26 +142,53 @@ struct ignore_case_op : op {
     }
 };
 
-struct output_group_op : op {
-    op *child;
-    int group_index;
-    std::string matchedText;
+struct capture_group_op : op {
+    std::string matchedSubstring;
 
-    output_group_op(op *child, int group_index) : child(child), group_index(group_index) {}
     bool eval(char *&first, char *last) override {
         char *temp = first;
-        if (child->eval(first, last)) {
-            matchedText.assign(temp, first);
-            return true;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = temp;
+                return false;
+            }
+            matchedSubstring.assign(temp, first);
+            capturedGroups.push_back(matchedSubstring);
         }
-        return false;
+        return true;
+    }
+
+    std::string id() override {
+        return "capture_group_op";
+    }
+};
+struct output_group_op : op {
+    output_group_op(int group_index) : group_index(group_index) {}
+    bool eval(char *&first, char *last) override {
+        group_index_ = group_index;
+        return true;
     }
     std::string id() override {
         return "output_group_op";
     }
 
-    std::string getMatchedText() {
-        return matchedText;
+    int group_index;
+};
+
+struct word_op : op {
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string id() override {
+        return "word_op";
     }
 };
 

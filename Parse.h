@@ -16,9 +16,7 @@ public:
     Parse(IT first, IT last) : lexer(first, last) {}
 
     ~Parse() = default;
-
     op *parse_expr();
-
     op *parse_sequence();
 
     op *parse_element();
@@ -33,6 +31,8 @@ public:
 
 
 private:
+
+    bool is_output_set = false;
     Lexer lexer;
 };
 

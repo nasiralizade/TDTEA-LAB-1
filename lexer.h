@@ -8,8 +8,20 @@
 #include <iostream>
 /**
  * Enum for the different types of tokens
+ * @param LETTER A-Z, a-z, 0-9,except for * + ( ) { } \
+ * @param L_PAR (
+ * @param R_PAR )
+ * @param L_BRACKET {
+ * @param R_BRACKET }
+ * @param REPEAT *
+ * @param ANY_CHAR .
+ * @param OR_OP +
+ * @param SLASH \
+ * @param OUTPUT_GROUP \\O{n}
+ * @param IGNORE_CASE \\I
+ * @param END end of the string
  */
-enum tokenType{
+enum tokenType {
     LETTER,
     L_PAR,
     R_PAR,

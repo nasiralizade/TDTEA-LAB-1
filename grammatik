@@ -5,4 +5,11 @@ Element   ::= Component ('{n}' Component)*
 Component      ::= CHAR | '.' | '(' Pattern ')' | Pattern '\I' | Pattern '\O{' DIGIT '}'
 CHAR    ::= Any character except special symbols (., +, *, (), {}, \I, \O)
 DIGIT   ::= [0-9]
-
+-----------------------------------------------------------------------------------------------------------------------------------------
++ eller, passar ett av två alternativ. Syntax: OP1+OP2
+* flera, passar ett eller flera upprepningar av en operand. Syntax: OP*
+() infångningsgrupp, deluttryck. Uttrycket parsas separat. Syntax: (EXPR)
+. tecken. matchar varlfritt tecken. Syntax: .
+{} räknare. matchar precis N stycken operander. Syntax: OP{3}
+\I ignorera versalisering. Syntax EXPR\I
+\O{} vilken infångningsgrupp som ska ges som output. Syntax: EXPR\O{2}. Default \O{0} hela matchningen.

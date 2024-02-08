@@ -1,9 +1,11 @@
 #include <iostream>
 #include "Parse.h"
 
+int group_index_ = 0;
+std::vector<std::string> capturedGroups;
 
 int main() {
-    std::string input = "(zz+love)";
+    std::string input = "lo* could.{3}";
     std::string text = "Waterloo I was defeated, you won the war Waterloo promise to love you for ever more Waterloo couldn't escape if I wanted to Waterloo knowing my fate is to be with you Waterloo finally facing my Waterloo";
     auto first = input.begin();
     auto last = input.end();
