@@ -1,8 +1,0 @@
------------------------------------------------------------------------------------------------------------------------------------------
-expr   ::= Sequence ('+' Sequence)*
-Sequence  ::= Element ('*' Element)*
-Element   ::= Component ('{n}' Component)*
-Component      ::= CHAR | '.' | '(' Pattern ')' | Pattern '\I' | Pattern '\O{' DIGIT '}'
-CHAR    ::= Any character except special symbols (., +, *, (), {}, \I, \O)
-DIGIT   ::= [0-9]
-
