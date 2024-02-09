@@ -10,6 +10,7 @@ int main(int argc, char *argv[]) {
   std::string pattern;
   std::string input;
   if (argc < 3) {
+    std::cout << "Using default pattern and input" << std::endl;
     pattern = "promise to (Love+Hate)\\I you\\O{1}";
     input =
         "Waterloo I was defeated, you won the war Waterloo promise to love you "

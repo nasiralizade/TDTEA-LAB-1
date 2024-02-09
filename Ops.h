@@ -28,8 +28,8 @@ extern std::vector<std::string> capturedGroups;
 
 struct char_op : op {
     char c;
-    char_op(char c) : c(c) {}
-    bool eval(char *&first, char *last) override {
+  explicit char_op(char c) : c(c) {}
+  bool eval(char *&first, char *last) override {
       char inputChar = *first;
       bool match =
           ignore_case_ ? tolower(inputChar) == tolower(c) : inputChar == c;
@@ -104,8 +104,8 @@ struct repeat : op {
 struct exact_op : op {
     int n;
 
-    exact_op(int n) : n(n) {}
-    bool eval(char *&first, char *last) override {
+  explicit exact_op(int n) : n(n) {}
+  bool eval(char *&first, char *last) override {
         auto start = first;
         for (int i = 0; i < n; i++) {
             if (!children[0]->eval(first, last)) {
@@ -122,7 +122,7 @@ struct exact_op : op {
 
 struct ignore_case_op : op {
     op *child;
-  ignore_case_op(op *child) : child(child) {
+  explicit ignore_case_op(op *child) : child(child) {
     set_ignore_case_recursive(child, true);
   }
     bool eval(char *&first, char *last) override {
@@ -141,8 +141,8 @@ struct ignore_case_op : op {
     }
     void set_ignore_case_recursive(op *operation, bool ignore_case) {
       operation->set_ignore_case(ignore_case);
-      for (auto &child : operation->children) {
-        set_ignore_case_recursive(child, ignore_case);
+      for (auto &child1 : operation->children) {
+        set_ignore_case_recursive(child1, ignore_case);
       }
     }
 };
@@ -168,8 +168,8 @@ struct capture_group_op : op {
     }
 };
 struct output_group_op : op {
-    output_group_op(int group_index) : group_index(group_index) {}
-    bool eval(char *&first, char *last) override {
+  explicit output_group_op(int group_index) : group_index(group_index) {}
+  bool eval(char *&first, char *last) override {
         group_index_ = group_index;
         return true;
     }
@@ -180,22 +180,6 @@ struct output_group_op : op {
     int group_index;
 };
 
-struct word_op : op {
-    bool eval(char *&first, char *last) override {
-        auto start = first;
-        for (auto &child: children) {
-            if (!child->eval(first, last)) {
-                first = start;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::string id() override {
-        return "word_op";
-    }
-};
 
 
 #endif //LABB1_V4_OPS_H

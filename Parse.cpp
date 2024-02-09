@@ -68,8 +68,8 @@ op *Parse::parse_element() {
 }
 
 /**
- * Operation  ::= <Subexpression>* | <Subexpression> \I |<Subexpression>
- * \O{number}
+ * Operation  ::= <Subexpression>* | <Subexpression> \I |
+ * <Subexpression>\O{number}
  * @return
  */
 op *Parse::parse_operation(op *lhs) {
@@ -90,7 +90,7 @@ op *Parse::parse_operation(op *lhs) {
           lhs->children.pop_back();
           lhs->add(ignore_op_p);
         } else if (next == 'O') {
-            lexer.advance();
+          lexer.advance();
           lexer.advance(); // skip the next {
           int groupNum = get_number();
           lexer.advance(); // skip the next }
@@ -131,7 +131,8 @@ op *Parse::parse_component() {
 }
 
 bool Parse::is_valid_char(char c) {
-    return c != '*' && c != '+' && c != '(' && c != ')' && c != '{' && c != '}' && c != '\\';
+  return c != '*' && c != '+' && c != '(' && c != ')' && c != '{' && c != '}' &&
+         c != '\\' && c != '.';
 }
 
 int Parse::get_number() {
