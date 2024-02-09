@@ -17,13 +17,15 @@ public:
 
     ~Parse() = default;
     op *parse_expr();
-    op *parse_sequence();
+    op *parse_subexpression();
 
     op *parse_element();
+    op *parse_operation(op *lhs);
 
     op *parse_component();
 
     bool is_valid_char(char c);
+    int get_number();
 
     bool match_from_any_pos(std::string &input);
 
@@ -31,8 +33,6 @@ public:
 
 
 private:
-
-    bool is_output_set = false;
     Lexer lexer;
 };
 

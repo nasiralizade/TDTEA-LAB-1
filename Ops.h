@@ -18,11 +18,9 @@ struct op {
     void add(op *child) {
         children.push_back(child);
     }
-    virtual ~op() {
-        for (auto &child: children) {
-            delete child;
-        }
-    }
+
+    bool ignore_case_ = false;
+    void set_ignore_case(bool ignore_case) { ignore_case_ = ignore_case; }
 };
 
 extern int group_index_;
@@ -30,11 +28,13 @@ extern std::vector<std::string> capturedGroups;
 
 struct char_op : op {
     char c;
-
     char_op(char c) : c(c) {}
     bool eval(char *&first, char *last) override {
-        if (first != last && *first == c) {
-            first++;
+      char inputChar = *first;
+      bool match =
+          ignore_case_ ? tolower(inputChar) == tolower(c) : inputChar == c;
+      if (match) {
+        first++;
             return true;
         }
         return false;
@@ -75,8 +75,8 @@ struct or_op : op {
     }
 };
 
-struct Sequence : op {
-    bool eval(char *&first, char *last) override {
+struct Subexpression : op {
+  bool eval(char *&first, char *last) override {
         auto start = first;
         for (auto &child: children) {
             if (!child->eval(first, last)) {
@@ -87,9 +87,7 @@ struct Sequence : op {
         return true;
     }
 
-    std::string id() override {
-        return "Sequence";
-    }
+    std::string id() override { return "Subexpression"; }
 };
 
 struct repeat : op {
@@ -124,13 +122,14 @@ struct exact_op : op {
 
 struct ignore_case_op : op {
     op *child;
-
-    void traverse(op *&root) {
-
-    }
-    ignore_case_op(op *child) : child(child) {}
+  ignore_case_op(op *child) : child(child) {
+    set_ignore_case_recursive(child, true);
+  }
     bool eval(char *&first, char *last) override {
-        char *temp = first;
+    for (auto &c : child->children) {
+      c->set_ignore_case(true);
+    }
+    char *temp = first;
         if (child->eval(first, last)) {
             return true;
         }
@@ -139,6 +138,12 @@ struct ignore_case_op : op {
     }
     std::string id() override {
         return "ignore_case_op";
+    }
+    void set_ignore_case_recursive(op *operation, bool ignore_case) {
+      operation->set_ignore_case(ignore_case);
+      for (auto &child : operation->children) {
+        set_ignore_case_recursive(child, ignore_case);
+      }
     }
 };
 

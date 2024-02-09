@@ -1,10 +1,14 @@
+# Labb1-Nasir Alizade
 -----------------------------------------------------------------------------------------------------------------------------------------
-expr   ::= Sequence ('+' Sequence)*
-Sequence  ::= Element ('*' Element)*
-Element   ::= Component ('{n}' Component)*
-Component      ::= CHAR | '.' | '(' Pattern ')' | Pattern '\I' | Pattern '\O{' DIGIT '}'
-CHAR    ::= Any character except special symbols (., +, *, (), {}, \I, \O)
+expr   ::= <Subexpression> ('+' <Subexpression>)*
+Subexpression  ::= Element (operation Element)*
+element   ::= component | exact_op
+exact_op ::= component '{' DIGIT '}'
+component ::= '(' expr ')' | ANY_CHAR | char | ...
+Operation  ::= <Subexpression>* | <Subexpression> \I |<Subexpression> \O{number}
+char ::= all characters except special symbols (., +, *, (), {}, \I, \O)
 DIGIT   ::= [0-9]
+
 -----------------------------------------------------------------------------------------------------------------------------------------
 + eller, passar ett av två alternativ. Syntax: OP1+OP2
 * flera, passar ett eller flera upprepningar av en operand. Syntax: OP*
