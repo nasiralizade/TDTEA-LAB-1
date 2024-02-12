@@ -1,13 +1,14 @@
-# Labb1-Nasir Alizade
+# Labb1
 -----------------------------------------------------------------------------------------------------------------------------------------
 expr   ::= <Subexpression> ('+' <Subexpression>)*
 Subexpression  ::= Element (operation Element)*
-element   ::= component | exact_op
-exact_op ::= component '{' DIGIT '}'
-component ::= '(' expr ')' | ANY_CHAR | char | ...
 Operation  ::= <Subexpression>* | <Subexpression> \I |<Subexpression> \O{number}
-char ::= all characters except special symbols (., +, *, (), {}, \I, \O)
+element   ::= component | component '{' number '}'
+component ::= '(' expr ')' | ANY_CHAR | char | ...
+char ::= [aA-zZ,digit] all characters except special symbols (., +, *, (), {}, \I, \O)
 DIGIT   ::= [0-9]
+ANY_CHAR ::= '.'
+number ::= DIGIT+
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 + eller, passar ett av två alternativ. Syntax: OP1+OP2
