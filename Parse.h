@@ -30,7 +30,7 @@ public:
    * Subexpression  ::= Element (operation Element)*
    * @return
    */
-  op *parse_subexpression();
+  op *parse_sub_expr();
   /**
    * element   ::= component | exact_op
    * @return
@@ -63,12 +63,22 @@ public:
    * @param input  the string to be matched
    * @return  true if the string is matched, false otherwise
    */
-
+  op *parse_word();
   bool match_from_any_pos(std::string &input);
 
 private:
   Lexer lexer;
   std::string matchedSubstring;
+
+    op *parse_char();
+
+    op *handleRepeat(op *lhs);
+
+    op *popLastChild(op *lhs);
+
+    op *handleSlash(op *lhs);
+
+    op *handleCount(op *lhs);
 };
 
 #endif // LABB1_V4_PARSE_H

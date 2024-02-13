@@ -1,14 +1,15 @@
 # Labb1
 -----------------------------------------------------------------------------------------------------------------------------------------
-expr   ::= <Subexpression> ('+' <Subexpression>)*
-Subexpression  ::= Element (operation Element)*
-Operation  ::= <Subexpression>* | <Subexpression> \I |<Subexpression> \O{number}
-element   ::= component | component '{' number '}'
-component ::= '(' expr ')' | ANY_CHAR | char | ...
-char ::= [aA-zZ,digit] all characters except special symbols (., +, *, (), {}, \I, \O)
-DIGIT   ::= [0-9]
-ANY_CHAR ::= '.'
-number ::= DIGIT+
+expression ::= subexpression
+Subexpression ::= element | element Modifier | element Modifier Subexpression | element Subexpression | element Subexpression Modifier
+Modifier ::= + | * | {N} | \I | \O{N}
+element ::= character | any_char | group
+character ::= a | b | c | ... | z | A | B | C | ... | Z | 0 | 1 | 2 | ... | 9
+any_char ::= .
+group ::= (expression)
+
+
+
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 + eller, passar ett av två alternativ. Syntax: OP1+OP2
