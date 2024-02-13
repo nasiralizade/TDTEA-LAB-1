@@ -103,7 +103,6 @@ struct repeat : op {
 
 struct exact_op : op {
     int n;
-
   explicit exact_op(int n) : n(n) {}
   bool eval(char *&first, char *last) override {
         auto start = first;
