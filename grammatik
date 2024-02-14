@@ -1,8 +1,8 @@
 # Labb1
 -----------------------------------------------------------------------------------------------------------------------------------------
-expression ::= subexpression
-Subexpression ::= element | element Modifier | element Modifier Subexpression | element Subexpression | element Subexpression Modifier
-Modifier ::= + | * | {N} | \I | \O{N}
+expression ::= subexpression '+' subexpression | subexpression
+Subexpression ::= element | element Modifier | element Modifier Subexpression | element Subexpression
+Modifier ::= * | {N} | \I | \O{N}
 element ::= character | any_char | group
 character ::= a | b | c | ... | z | A | B | C | ... | Z | 0 | 1 | 2 | ... | 9
 any_char ::= .

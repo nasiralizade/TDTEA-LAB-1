@@ -4,11 +4,22 @@
 #include "Parse.h"
 
 /**
- * expr   ::= <Subexpression> ('+' <Subexpression>)*
+ * expr   ::= <Subexpression> '+' <Subexpression> | <Subexpression>
  * @return
  */
 op *Parse::parse_expr() {
     auto lhs = parse_sub_expr();
+    if (lexer.get_current().type == OR_OP) {
+        lexer.advance();
+        auto orOp = new or_op();
+        orOp->add(lhs);
+        auto rhs = parse_sub_expr();
+        if (!rhs) {
+            throw std::runtime_error("Expected subexpression");
+        }
+        orOp->add(rhs);
+        lhs = orOp;
+    }
     return lhs;
 }
 
@@ -18,43 +29,34 @@ op *Parse::parse_expr() {
 // | element Subexpression
 op *Parse::parse_sub_expr() {
     auto lhs = parse_element();
-    if (!lhs) {
-        throw std::runtime_error("Expected element");
-    }
+    if (lhs) {
+        while (true) {
+            auto modif = parse_operation(lhs);
+            if (modif) {
+                lhs = modif;  // Apply modifier to the left-hand side
 
-    // Handle modifiers and subexpressions recursively
-    while (true) {
-        auto modif = parse_operation(lhs);
-        if (modif) {
-            lhs = modif;  // Apply modifier to the left-hand side
-        } else if (lexer.get_current().type != END) {
-            // Parse a subexpression, wrapping in a Subexpression object if necessary
-            auto subExpr = parse_sub_expr();
-            if (subExpr) {
-
-                auto lhs1 = new Subexpression();
-                lhs1->add(lhs);
-                lhs1->add(subExpr);
-                lhs = lhs1;
-                return lhs;
+            } else if (lexer.get_current().type != END && lexer.get_current().type != R_PAR &&
+                       lexer.get_current().type != OR_OP) {
+                auto subExpr = parse_sub_expr();
+                if (subExpr) {
+                    auto lhs1 = new Subexpression();
+                    lhs1->add(lhs);
+                    lhs1->add(subExpr);
+                    lhs = lhs1;
+                    return lhs;
+                }
+            } else {
+                break;
             }
-        } else {
-            break;  // End of input
         }
+        return lhs;
     }
 
-    return lhs;
+    return nullptr;
 }
 
 
-bool Parse::match_from_any_pos(std::string &input) {
 
-    auto first = input.begin();
-    auto last = input.end();
-    auto expr = parse_expr();
-
-    return 0;
-}
 
 int Parse::get_number() {
     if (lexer.get_current().type == L_BRACKET) {
@@ -79,7 +81,9 @@ op *Parse::parse_element() {
             throw std::runtime_error("Expected )");
         }
         lexer.advance();
-        return expr;
+        auto group = new capture_group_op();
+        group->add(expr);
+        return group;
     } else if (tk == ANY_CHAR) {
         lexer.advance();
         return new any_char_op();
@@ -101,19 +105,7 @@ op *Parse::parse_operation(op *lhs) {
             repeatOp->add(lhs);
             return repeatOp;
         }
-        case OR_OP: {
-            lexer.advance();
-            auto rhs = parse_element();
-            if (!rhs) {
-                throw std::runtime_error("Expected element");
-            }
-            auto orOp = new or_op();
-            orOp->add(lhs);
-            orOp->add(rhs);
-            return orOp;
-        }
         case L_BRACKET: {
-            lexer.advance();
             auto count = get_number();
             auto countOp = new exact_op(count);
             countOp->add(lhs);
@@ -132,7 +124,8 @@ op *Parse::handleSlash(op *lhs) {
     char next = lexer.get_current().text[0];
     if (next == 'I') {
         lexer.advance();
-        auto iOp = new ignore_case_op(lhs);
+        auto iOp = new ignore_case_op();
+        iOp->add(lhs);
         return iOp;
     } else if (next == 'O') {
         lexer.advance();
@@ -144,5 +137,21 @@ op *Parse::handleSlash(op *lhs) {
         throw std::runtime_error("Expected I or O");
     }
 
+}
+
+bool Parse::match_from_any_pos(std::string &input) {
+
+    char *first = &input[0];
+    char *last = &input[input.size()];
+    auto expr = parse_expr();
+    print_tree(expr);
+    while (first != last) {
+        if (expr->eval(first, last)) {
+            std::cout << "Matched: " << std::string(&input[0], first) << std::endl;
+            return true;
+        }
+        first++;
+    }
+    return false;
 }
 

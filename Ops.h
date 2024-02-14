@@ -28,19 +28,23 @@ extern std::vector<std::string> capturedGroups;
 
 struct char_op : op {
     char c;
-  explicit char_op(char c) : c(c) {}
-  bool eval(char *&first, char *last) override {
-      char inputChar = *first;
-      bool match =
-              ignore_case_ ? tolower(inputChar) == tolower(c) : inputChar == c;
-      if (match) {
-          first++;
-          return true;
-      }
-      return false;
-  }
 
-    std::string id() override { return "char_op"; }
+    explicit char_op(char c) : c(c) {}
+
+    bool eval(char *&first, char *last) override {
+        char inputChar = *first;
+        bool match =
+                ignore_case_ ? tolower(inputChar) == tolower(c) : inputChar == c;
+        if (match) {
+            first++;
+            return true;
+        }
+        return false;
+    }
+
+    std::string id() override {
+        return "char_op: " + std::string(1, c);
+    }
 };
 
 struct any_char_op : op {
@@ -70,16 +74,16 @@ struct or_op : op {
 };
 
 struct Subexpression : op {
-  bool eval(char *&first, char *last) override {
-      auto start = first;
-      for (auto &child: children) {
-          if (!child->eval(first, last)) {
-              first = start;
-              return false;
-          }
-      }
-      return true;
-  }
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
 
     std::string id() override { return "Subexpression"; }
 };
@@ -96,33 +100,30 @@ struct repeat_op : op {
 
 struct exact_op : op {
     int n;
-  explicit exact_op(int n) : n(n) {}
-  bool eval(char *&first, char *last) override {
-      auto start = first;
-      for (int i = 0; i < n; i++) {
-          if (!children[0]->eval(first, last)) {
-              first = start;
-              return false;
-          }
-      }
-      return true;
-  }
+
+    explicit exact_op(int n) : n(n) {}
+
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (int i = 0; i < n; i++) {
+            if (!children[0]->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
 
     std::string id() override { return "exact_op"; }
 };
 
 struct ignore_case_op : op {
-    op *child;
-  explicit ignore_case_op(op *child) : child(child) {
-    set_ignore_case_recursive(child, true);
-  }
-
     bool eval(char *&first, char *last) override {
-    for (auto &c : child->children) {
-      c->set_ignore_case(true);
-    }
-    char *temp = first;
-        if (child->eval(first, last)) {
+        for (auto &c: children) {
+            set_ignore_case_recursive(c, true);
+        }
+        char *temp = first;
+        if (children[0]->eval(first, last)) {
             return true;
         }
         first = temp;
@@ -157,12 +158,14 @@ struct capture_group_op : op {
 
     std::string id() override { return "capture_group_op"; }
 };
+
 struct output_group_op : op {
-  explicit output_group_op(int group_index) : group_index(group_index) {}
-  bool eval(char *&first, char *last) override {
-      group_index_ = group_index;
-      return true;
-  }
+    explicit output_group_op(int group_index) : group_index(group_index) {}
+
+    bool eval(char *&first, char *last) override {
+        group_index_ = group_index;
+        return true;
+    }
 
     std::string id() override { return "output_group_op"; }
 

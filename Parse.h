@@ -79,6 +79,22 @@ private:
     op *handleSlash(op *lhs);
 
     op *handleCount(op *lhs);
+
+    void print_tree(op *root, const std::string &prefix = "", const std::string &children_prefix = "") {
+        if (root == nullptr) {
+            return;
+        }
+
+        // Print the current node's ID with the current prefix
+        std::cout << prefix << root->id() << std::endl;
+
+        // Process all children except the last one, adding branches and adjusting the children_prefix
+        for (size_t i = 0; i < root->children.size(); ++i) {
+            auto next_prefix = children_prefix + (i < root->children.size() - 1 ? "├── " : "└── ");
+            auto next_children_prefix = children_prefix + (i < root->children.size() - 1 ? "│   " : "    ");
+            print_tree(root->children[i], next_prefix, next_children_prefix);
+        }
+    }
 };
 
 #endif // LABB1_V4_PARSE_H
