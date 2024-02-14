@@ -56,15 +56,21 @@ op *Parse::parse_sub_expr() {
 }
 
 
-
-
+// number::={digit}+
 int Parse::get_number() {
     if (lexer.get_current().type == L_BRACKET) {
         lexer.advance();
         std::string number;
         while (lexer.get_current().type != R_BRACKET) {
-            number += lexer.get_current().text;
+            if (isdigit(lexer.get_current().text[0])) {
+                number += lexer.get_current().text;
+            } else {
+                throw std::runtime_error("Expected number");
+            }
             lexer.advance();
+        }
+        if (lexer.get_current().type != R_BRACKET) {
+            throw std::runtime_error("Expected }");
         }
         lexer.advance();
         return std::stoi(number);
@@ -72,6 +78,7 @@ int Parse::get_number() {
     throw std::runtime_error("Expected {");
 }
 
+// element ::= character | any_char | group
 op *Parse::parse_element() {
     auto tk = lexer.get_current().type;
     if (tk == L_PAR) {
@@ -96,8 +103,8 @@ op *Parse::parse_element() {
     }
 }
 
+//
 op *Parse::parse_operation(op *lhs) {
-    auto start = lexer;
     switch (lexer.get_current().type) {
         case REPEAT: {
             lexer.advance();
@@ -120,17 +127,19 @@ op *Parse::parse_operation(op *lhs) {
     }
 }
 
+//
 op *Parse::handleSlash(op *lhs) {
     char next = lexer.get_current().text[0];
     if (next == 'I') {
         lexer.advance();
-        auto iOp = new ignore_case_op();
-        iOp->add(lhs);
-        return iOp;
+        auto pIgnoreCaseOp = new ignore_case_op();
+        pIgnoreCaseOp->add(lhs);
+        return pIgnoreCaseOp;
     } else if (next == 'O') {
         lexer.advance();
         int n = get_number();
         auto output = new output_group_op(n);
+        group_index_ = n;
         lhs->add(output);
         return lhs;
     } else {
@@ -140,17 +149,27 @@ op *Parse::handleSlash(op *lhs) {
 }
 
 bool Parse::match_from_any_pos(std::string &input) {
-
+    std::string line(80, '-');
     char *first = &input[0];
     char *last = &input[input.size()];
     auto expr = parse_expr();
+    if (!expr) {
+        throw std::runtime_error("Expected expression");
+    }
+    std::cout << line << std::endl;
     print_tree(expr);
     while (first != last) {
+        char *temp = first;
         if (expr->eval(first, last)) {
-            std::cout << "Matched: " << std::string(&input[0], first) << std::endl;
+            matchedSubstring = std::string(temp, first);
+            if (group_index_ > 0) {
+                std::cout << line << "\n" << capturedGroups[group_index_ - 1] << std::endl;
+                return true;
+            }
+            std::cout << line << "\nMatched: " << matchedSubstring << std::endl;
             return true;
         }
-        first++;
+        first = temp + 1;
     }
     return false;
 }

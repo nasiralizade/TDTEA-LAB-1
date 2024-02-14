@@ -21,6 +21,9 @@ struct op {
     bool ignore_case_ = false;
 
     void set_ignore_case(bool ignore_case) { ignore_case_ = ignore_case; }
+
+    virtual ~op() = default;
+
 };
 
 extern int group_index_;
@@ -32,9 +35,8 @@ struct char_op : op {
     explicit char_op(char c) : c(c) {}
 
     bool eval(char *&first, char *last) override {
-        char inputChar = *first;
         bool match =
-                ignore_case_ ? tolower(inputChar) == tolower(c) : inputChar == c;
+                ignore_case_ ? tolower(*first) == tolower(c) : *first == c;
         if (match) {
             first++;
             return true;
@@ -45,6 +47,7 @@ struct char_op : op {
     std::string id() override {
         return "char_op: " + std::string(1, c);
     }
+
 };
 
 struct any_char_op : op {
@@ -71,6 +74,12 @@ struct or_op : op {
     }
 
     std::string id() override { return "or_op"; }
+
+    ~or_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
 };
 
 struct Subexpression : op {
@@ -86,6 +95,12 @@ struct Subexpression : op {
     }
 
     std::string id() override { return "Subexpression"; }
+
+    ~Subexpression() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
 };
 
 struct repeat_op : op {
@@ -115,6 +130,13 @@ struct exact_op : op {
     }
 
     std::string id() override { return "exact_op"; }
+
+    ~exact_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+
+    }
 };
 
 struct ignore_case_op : op {
@@ -138,6 +160,12 @@ struct ignore_case_op : op {
             set_ignore_case_recursive(child1, ignore_case);
         }
     }
+
+    ~ignore_case_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
 };
 
 struct capture_group_op : op {
@@ -157,6 +185,12 @@ struct capture_group_op : op {
     }
 
     std::string id() override { return "capture_group_op"; }
+
+    ~capture_group_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
 };
 
 struct output_group_op : op {
@@ -169,25 +203,14 @@ struct output_group_op : op {
 
     std::string id() override { return "output_group_op"; }
 
+    ~output_group_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
+
     int group_index;
 };
 
-struct word_op : op {
-    bool eval(char *&first, char *last) override {
-        auto start = first;
-        if (first == last) {
-            return false;
-        }
-        for (auto &child: children) {
-            if (!child->eval(first, last)) {
-                first = start;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::string id() override { return "word_op"; }
-};
 
 #endif // LABB1_V4_OPS_H
