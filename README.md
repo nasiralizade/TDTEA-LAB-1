@@ -41,7 +41,7 @@ group ::= (expression)
 
 ## Code Overview
 
-The main components of the parser are:
+The main components of the program are:
 
 * `lexer.h`: Contains the declaration of the `Lexer` class, which is responsible for tokenizing the input string.
 * `Ops.h`: Contains the declaration of the `Ops` class, which is responsible for defining the operations that can be
