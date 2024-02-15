@@ -1,9 +1,16 @@
 # Labb1
------------------------------------------------------------------------------------------------------------------------------------------
+// Created by Nasir Alizade on 2024-02-06.
+// Program: TDTEA.  : HT2021 - Labb 1
+---------------------------------------------------------------------------------------------------------------------------------------
+match ::= expression
 expression ::= subexpression '+' subexpression | subexpression
 Subexpression ::= element | element Modifier | element Modifier Subexpression | element Subexpression
-Modifier ::= * | {N} | \I | \O{N}
 element ::= character | any_char | group
+Modifier ::= REPEAT | COUNT | IGNORE_CASE | OUTPUT_GROUP
+REPEAT ::= element'*'
+Count ::= element'{''number''}'
+IGNORE_CASE ::= element'\I'
+OUTPUT_GROUP ::= element'\O{''number''}'
 character ::= a | b | c | ... | z | A | B | C | ... | Z | 0 | 1 | 2 | ... | 9
 any_char ::= .
 group ::= (expression)
@@ -11,7 +18,7 @@ group ::= (expression)
 
 
 
------------------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------------
 + eller, passar ett av två alternativ. Syntax: OP1+OP2
 * flera, passar ett eller flera upprepningar av en operand. Syntax: OP*
 () infångningsgrupp, deluttryck. Uttrycket parsas separat. Syntax: (EXPR)

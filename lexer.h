@@ -31,8 +31,6 @@ enum tokenType {
     ANY_CHAR,
     OR_OP,
     SLASH,
-    OUTPUT_GROUP,
-    IGNORE_CASE,
     END
 };
 

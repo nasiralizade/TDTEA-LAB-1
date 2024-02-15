@@ -1,5 +1,6 @@
 //
 // Created by Nasir Alizade on 2024-02-06.
+// Program: TDTEA.  : HT2021 - Labb 1
 //
 #include "Parse.h"
 
@@ -33,16 +34,15 @@ op *Parse::parse_sub_expr() {
         while (true) {
             auto modif = parse_modifier(lhs);
             if (modif) {
-                lhs = modif;  // Apply modifier to the left-hand side
-
+                lhs = modif;  // då har lhs modifierats
             } else if (lexer.get_current().type != END && lexer.get_current().type != R_PAR &&
                        lexer.get_current().type != OR_OP) {
                 auto subExpr = parse_sub_expr();
                 if (subExpr) {
-                    auto lhs1 = new Subexpression();
-                    lhs1->add(lhs);
-                    lhs1->add(subExpr);
-                    lhs = lhs1;
+                    auto expr2 = new Subexpression();
+                    expr2->add(lhs);
+                    expr2->add(subExpr);
+                    lhs = expr2;
                     return lhs;
                 }
             } else {
@@ -61,13 +61,15 @@ int Parse::get_number() {
     if (lexer.get_current().type == L_BRACKET) {
         lexer.advance();
         std::string number;
-        while (lexer.get_current().type != R_BRACKET) {
+        if (lexer.get_current().type == R_BRACKET) {
+            throw std::runtime_error("Expected number in {}");
+        }
+        while (lexer.get_current().type == LETTER && lexer.get_current().type != R_BRACKET) {
             if (isdigit(lexer.get_current().text[0])) {
-                number += lexer.get_current().text;
-            } else {
-                throw std::runtime_error("Expected number");
+                number += lexer.get_current().text[0];
+                lexer.advance();
             }
-            lexer.advance();
+
         }
         if (lexer.get_current().type != R_BRACKET) {
             throw std::runtime_error("Expected }");
@@ -103,7 +105,7 @@ op *Parse::parse_element() {
     }
 }
 
-//
+// Modifier ::= REPEAT | COUNT | IGNORE_CASE | OUTPUT_GROUP
 op *Parse::parse_modifier(op *lhs) {
     switch (lexer.get_current().type) {
         case REPEAT: { // *

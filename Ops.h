@@ -106,11 +106,16 @@ struct Subexpression : op {
 struct repeat_op : op {
     bool eval(char *&first, char *last) override {
         while (first != last && children[0]->eval(first, last)) {
+            count_c++;
         }
-        return true;
+        if (count_c != 0) return true;
+
+        return false;
     }
 
     std::string id() override { return "repeat"; }
+
+    int count_c = 0;
 };
 
 struct exact_op : op {
@@ -135,7 +140,6 @@ struct exact_op : op {
         for (auto &child: children) {
             delete child;
         }
-
     }
 };
 
