@@ -43,6 +43,11 @@ group ::= (expression)
 
 The main components of the parser are:
 
+* `lexer.h`: Contains the declaration of the `Lexer` class, which is responsible for tokenizing the input string.
+* `Ops.h`: Contains the declaration of the `Ops` class, which is responsible for defining the operations that can be
+  performed on the input string.
+* `Parser.h`: Contains the declaration of the `Parser` class, which is the main class of the application. It includes
+  methods to parse expressions, subexpressions, elements, modifiers, and handle special characters.
 * `Parse.cpp`: Contains the main parsing logic. It includes methods to parse expressions, subexpressions, elements,
   modifiers, and handle special characters.
 * `main.cpp`: The entry point of the application.
