@@ -63,6 +63,6 @@ If you encounter any issues, please open an issue on GitHub.
 ## Version History
 
 * 0.1
-    * Initial Release
-
+  * Release name: v0.1
+  * Description: This release, v0.1 includes improvements to the parsing functionality and overall performance enhancements. It also includes minor bug fixes and code optimizations.
 ## License
