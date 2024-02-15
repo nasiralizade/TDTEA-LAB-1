@@ -31,7 +31,7 @@ op *Parse::parse_sub_expr() {
     auto lhs = parse_element();
     if (lhs) {
         while (true) {
-            auto modif = parse_operation(lhs);
+            auto modif = parse_modifier(lhs);
             if (modif) {
                 lhs = modif;  // Apply modifier to the left-hand side
 
@@ -81,7 +81,7 @@ int Parse::get_number() {
 // element ::= character | any_char | group
 op *Parse::parse_element() {
     auto tk = lexer.get_current().type;
-    if (tk == L_PAR) {
+    if (tk == L_PAR) { // group:== '(' expr ')'
         lexer.advance();
         auto expr = parse_expr();
         if (lexer.get_current().type != R_PAR) {
@@ -91,10 +91,10 @@ op *Parse::parse_element() {
         auto group = new capture_group_op();
         group->add(expr);
         return group;
-    } else if (tk == ANY_CHAR) {
+    } else if (tk == ANY_CHAR) { // any_char:== '.'
         lexer.advance();
         return new any_char_op();
-    } else if (tk == LETTER) {
+    } else if (tk == LETTER) { // character:== <letter>
         auto c = lexer.get_current().text[0];
         lexer.advance();
         return new char_op(c);
@@ -104,21 +104,21 @@ op *Parse::parse_element() {
 }
 
 //
-op *Parse::parse_operation(op *lhs) {
+op *Parse::parse_modifier(op *lhs) {
     switch (lexer.get_current().type) {
-        case REPEAT: {
+        case REPEAT: { // *
             lexer.advance();
             auto repeatOp = new repeat_op();
             repeatOp->add(lhs);
             return repeatOp;
         }
-        case L_BRACKET: {
+        case L_BRACKET: { // {n}
             auto count = get_number();
             auto countOp = new exact_op(count);
             countOp->add(lhs);
             return countOp;
         }
-        case SLASH: {
+        case SLASH: {// \I or \O
             lexer.advance();
             return handleSlash(lhs);
         }
@@ -132,9 +132,9 @@ op *Parse::handleSlash(op *lhs) {
     char next = lexer.get_current().text[0];
     if (next == 'I') {
         lexer.advance();
-        auto pIgnoreCaseOp = new ignore_case_op();
-        pIgnoreCaseOp->add(lhs);
-        return pIgnoreCaseOp;
+        auto IgnoreCaseOp = new ignore_case_op();
+        IgnoreCaseOp->add(lhs);
+        return IgnoreCaseOp;
     } else if (next == 'O') {
         lexer.advance();
         int n = get_number();

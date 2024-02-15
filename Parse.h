@@ -34,7 +34,7 @@ public:
      * @param lhs  left hand side of the operation
      * @return
      */
-    op *parse_operation(op *lhs);
+    op *parse_modifier(op *lhs);
 
     /**
      *
