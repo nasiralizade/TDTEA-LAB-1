@@ -1,131 +1,178 @@
 //
 // Created by Nasir Alizade on 2024-02-06.
+// Program: TDTEA.  : HT2021 - Labb 1
 //
 #include "Parse.h"
 
+/**
+ * expr   ::= <Subexpression> '+' <Subexpression> | <Subexpression>
+ * @return
+ */
 op *Parse::parse_expr() {
-    auto lhs = parse_sequence();
-    while (lexer.get_current().type == OR_OP) {
+    auto lhs = parse_sub_expr();
+    if (lexer.get_current().type == OR_OP) {
         lexer.advance();
-        auto rhs = parse_sequence();
-        auto or_op_p = new or_op();
-        or_op_p->add(lhs);
-        or_op_p->add(rhs);
-        lhs = or_op_p;
+        auto orOp = new or_op();
+        orOp->add(lhs);
+        auto rhs = parse_sub_expr();
+        if (!rhs) {
+            throw std::runtime_error("Expected subexpression");
+        }
+        orOp->add(rhs);
+        lhs = orOp;
     }
     return lhs;
 }
 
-/**
- * Sequence  ::= Element ('*' Element)*
- * @return
- */
-op *Parse::parse_sequence() {
+//Subexpression ::= element
+// | element Modifier
+// | element Modifier Subexpression
+// | element Subexpression
+op *Parse::parse_sub_expr() {
     auto lhs = parse_element();
-    auto seq_op_p = new Sequence();
-    seq_op_p->add(lhs);
-    while (lexer.get_current().type != END && lexer.get_current().type != OR_OP && lexer.get_current().type != R_PAR) {
-        if (lexer.get_current().type == REPEAT) {
-            lexer.advance();
-            auto repeat_op_p = new repeat();
-            repeat_op_p->add(seq_op_p->children.back());
-            seq_op_p->children.pop_back();
-            seq_op_p->add(repeat_op_p);
-        } else {
-            auto next = parse_element();
-            seq_op_p->add(next);
+    if (lhs) {
+        while (true) {
+            auto modif = parse_modifier(lhs);
+            if (modif) {
+                lhs = modif;  // då har lhs modifierats
+            } else if (lexer.get_current().type != END && lexer.get_current().type != R_PAR &&
+                       lexer.get_current().type != OR_OP) {
+                auto subExpr = parse_sub_expr();
+                if (subExpr) {
+                    auto expr2 = new Subexpression();
+                    expr2->add(lhs);
+                    expr2->add(subExpr);
+                    lhs = expr2;
+                    return lhs;
+                }
+            } else {
+                break;
+            }
         }
+        return lhs;
     }
-    if (seq_op_p->children.size() == 1) {
-        auto single = seq_op_p->children.front();
-        seq_op_p->children.clear();
-        delete seq_op_p;
-        return single;
-    }
-    return seq_op_p;
+
+    return nullptr;
 }
 
-op *Parse::parse_element() {
-    auto component = parse_component();
+
+// number::={digit}+
+int Parse::get_number() {
     if (lexer.get_current().type == L_BRACKET) {
         lexer.advance();
         std::string number;
-        while (lexer.get_current().type == LETTER) {
-            number += lexer.get_current().text;
-            lexer.advance();
+        if (lexer.get_current().type == R_BRACKET) {
+            throw std::runtime_error("Expected number in {}");
         }
-        if (lexer.get_current().type != R_BRACKET) {
-            std::cerr << "missing }\n";
-        }
-        lexer.advance();
-        auto count_op = new exact_op(std::stoi(number));
-        count_op->add(component);
-        return count_op;
-    }
-    return component;
-}
-
-op *Parse::parse_component() {
-    auto tk = lexer.get_current();
-    if (tk.type == L_PAR) {
-        lexer.advance();
-        auto expr = parse_expr();
-        lexer.advance();
-        return expr;
-    } else if (tk.type == ANY_CHAR) {
-        lexer.advance();
-        return new any_char_op();
-    } else if (tk.type == SLASH) {
-        lexer.advance();
-        char next = lexer.get_current().text[0];
-        if (next == 'I') {
-            lexer.advance();
-            return new ignore_case_op(parse_component());
-        } else if (next == 'O') {
-            lexer.advance();
-            lexer.advance(); //skip the next {
-            std::string groupNum;
-            while (lexer.get_current().type == LETTER) {
-                groupNum += lexer.get_current().text;
+        while (lexer.get_current().type == LETTER && lexer.get_current().type != R_BRACKET) {
+            if (isdigit(lexer.get_current().text[0])) {
+                number += lexer.get_current().text[0];
                 lexer.advance();
             }
-            lexer.advance(); //skip the next }
-            return new output_group_op(parse_component(), std::stoi(groupNum));
+
         }
-    } else if (is_valid_char(tk.text[0])) {
-        char c = tk.text[0];
+        if (lexer.get_current().type != R_BRACKET) {
+            throw std::runtime_error("Expected }");
+        }
         lexer.advance();
-        return new char_op(c);
+        return std::stoi(number);
     }
-    throw std::runtime_error("Unspeckted token in parse_component");
+    throw std::runtime_error("Expected {");
 }
 
-bool Parse::is_valid_char(char c) {
-    return c != '*' && c != '+' && c != '(' && c != ')' && c != '{' && c != '}' && c != '\\';
+// element ::= character | any_char | group
+op *Parse::parse_element() {
+    auto tk = lexer.get_current().type;
+    if (tk == L_PAR) { // group:== '(' expr ')'
+        lexer.advance();
+        auto expr = parse_expr();
+        if (lexer.get_current().type != R_PAR) {
+            throw std::runtime_error("Expected )");
+        }
+        lexer.advance();
+        auto group = new capture_group_op();
+        group->add(expr);
+        return group;
+    } else if (tk == ANY_CHAR) { // any_char:== '.'
+        lexer.advance();
+        return new any_char_op();
+    } else if (tk == LETTER) { // character:== <letter>
+        auto c = lexer.get_current().text[0];
+        lexer.advance();
+        return new char_op(c);
+    } else {
+        return nullptr;
+    }
+}
+
+// Modifier ::= REPEAT | COUNT | IGNORE_CASE | OUTPUT_GROUP
+op *Parse::parse_modifier(op *lhs) {
+    switch (lexer.get_current().type) {
+        case REPEAT: { // *
+            lexer.advance();
+            auto repeatOp = new repeat_op();
+            repeatOp->add(lhs);
+            return repeatOp;
+        }
+        case L_BRACKET: { // {n}
+            auto count = get_number();
+            auto countOp = new exact_op(count);
+            countOp->add(lhs);
+            return countOp;
+        }
+        case SLASH: {// \I or \O
+            lexer.advance();
+            return handleSlash(lhs);
+        }
+        default:
+            return nullptr;
+    }
+}
+
+//
+op *Parse::handleSlash(op *lhs) {
+    char next = lexer.get_current().text[0];
+    if (next == 'I') {
+        lexer.advance();
+        auto IgnoreCaseOp = new ignore_case_op();
+        IgnoreCaseOp->add(lhs);
+        return IgnoreCaseOp;
+    } else if (next == 'O') {
+        lexer.advance();
+        int n = get_number();
+        auto output = new output_group_op(n);
+        group_index_ = n;
+        lhs->add(output);
+        return lhs;
+    } else {
+        throw std::runtime_error("Expected I or O");
+    }
+
 }
 
 bool Parse::match_from_any_pos(std::string &input) {
+    std::string line(80, '-');
     char *first = &input[0];
     char *last = &input[input.size()];
-    auto pattern = parse_expr();
+    auto expr = parse_expr();
+    if (!expr) {
+        throw std::runtime_error("Expected expression");
+    }
+    std::cout << line << std::endl;
+    print_tree(expr);
     while (first != last) {
         char *temp = first;
-        if (pattern->eval(first, last)) {
-            delete pattern;
+        if (expr->eval(first, last)) {
             matchedSubstring = std::string(temp, first);
-            std::cout << "Matched: " << matchedSubstring << std::endl; // Skriv ut den matchade delsträngen
+            if (group_index_ > 0) {
+                std::cout << line << "\n" << capturedGroups[group_index_ - 1] << std::endl;
+                return true;
+            }
+            std::cout << line << "\nMatched: " << matchedSubstring << std::endl;
             return true;
         }
         first = temp + 1;
     }
-    delete pattern;
     return false;
 }
-
-
-
-
-
-
-
 
