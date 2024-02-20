@@ -131,22 +131,21 @@ capture_group_op *Parse::parse_group() {
 }
 
 // <REPEAT>   ::= <CHAR>* | <CHAR><COUNT>
-repeat_op *Parse::parse_repeat() {
+op *Parse::parse_repeat() {
     auto start = lexer;
     auto charOp = parse_char();
     if (charOp) {
         if (lexer.get_current().type == ASTERISK) {// ASTERISK
             lexer.advance();
-            auto repeat = new repeat_op();
+            auto repeat = new star_op();
             repeat->add(charOp);
             return repeat;
         }
         auto count = parse_count();
         if (count) {
-            auto repeat = new repeat_op();
-            repeat->add(charOp);
-            repeat->add(count);
-            return repeat;
+            auto countOP = new count_op(count->n);
+            countOP->add(charOp);
+            return countOP;
         }
     }
     lexer = start;

@@ -25,7 +25,7 @@ public:
     expr_op* parse_expr();
     or_op* parse_or();
     ignore_case_op* parse_ignore();
-    repeat_op* parse_repeat();
+    op* parse_repeat();
     word_op* parse_word();
     op* parse_char();
     capture_group_op* parse_group();

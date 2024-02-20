@@ -82,7 +82,7 @@ struct or_op : op {
     }
 };
 
-struct repeat_op : op {
+struct star_op : op {
     bool eval(char *&first, char *last) override {
         while (first != last && children[0]->eval(first, last)) {
             count_c++;
@@ -92,7 +92,7 @@ struct repeat_op : op {
         return false;
     }
 
-    std::string id() override { return "repeat"; }
+    std::string id() override { return "star"; }
 
     int count_c = 0;
 };
@@ -113,7 +113,7 @@ struct count_op : op {
         return true;
     }
 
-    std::string id() override { return "count_op"; }
+    std::string id() override { return "count_op: "+std::to_string(n); }
 
     ~count_op() override {
         for (auto &child: children) {
