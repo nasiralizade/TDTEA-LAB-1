@@ -82,27 +82,6 @@ struct or_op : op {
     }
 };
 
-struct Subexpression : op {
-    bool eval(char *&first, char *last) override {
-        auto start = first;
-        for (auto &child: children) {
-            if (!child->eval(first, last)) {
-                first = start;
-                return false;
-            }
-        }
-        return true;
-    }
-
-    std::string id() override { return "Subexpression"; }
-
-    ~Subexpression() override {
-        for (auto &child: children) {
-            delete child;
-        }
-    }
-};
-
 struct repeat_op : op {
     bool eval(char *&first, char *last) override {
         while (first != last && children[0]->eval(first, last)) {

@@ -258,7 +258,11 @@ bool Parse::match_from_any_pos(const std::string &input) {
     while (first != last) {
         auto start = first;
         if (expr->eval(first, last)) {
-            std::cout << "Matched: " << std::string(start, first) << std::endl;
+            if (group_index_ > 0) {
+                std::cout << "Matched: " << capturedGroups[group_index_-1] << std::endl;
+            } else {
+                std::cout << "Matched: " << std::string(start, first) << std::endl;
+            }
             return true;
         }
         first=start+1;
