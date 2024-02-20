@@ -4,6 +4,8 @@
 
 This project is a parser for a custom language, developed as part of the HT2024 Lab 1. It is implemented in C++.
 
+[![CodeQL](https://github.com/nasiralizade/TDTEA-LAB-1/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/nasiralizade/TDTEA-LAB-1/actions/workflows/github-code-scanning/codeql)
+
 ### Grammar
 
 The grammar of the language is as follows:
