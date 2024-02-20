@@ -27,7 +27,7 @@ enum tokenType {
     R_PAR,
     L_BRACKET,
     R_BRACKET,
-    REPEAT,
+    ASTERISK,
     ANY_CHAR,
     OR_OP,
     SLASH,
@@ -62,7 +62,7 @@ public:
         Token tk;
         switch (*first) {
             case '*':
-                tk = {REPEAT, "*"};
+                tk = {ASTERISK, "*"};
                 break;
             case '.':
                 tk = {ANY_CHAR, "."};

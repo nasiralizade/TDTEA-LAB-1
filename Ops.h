@@ -118,10 +118,10 @@ struct repeat_op : op {
     int count_c = 0;
 };
 
-struct exact_op : op {
+struct count_op : op {
     int n;
 
-    explicit exact_op(int n) : n(n) {}
+    explicit count_op(int n) : n(n) {}
 
     bool eval(char *&first, char *last) override {
         auto start = first;
@@ -134,9 +134,9 @@ struct exact_op : op {
         return true;
     }
 
-    std::string id() override { return "exact_op"; }
+    std::string id() override { return "count_op"; }
 
-    ~exact_op() override {
+    ~count_op() override {
         for (auto &child: children) {
             delete child;
         }
@@ -205,7 +205,7 @@ struct output_group_op : op {
         return true;
     }
 
-    std::string id() override { return "output_group_op"; }
+    std::string id() override { return "output_group_op: "+std::to_string(group_index); }
 
     ~output_group_op() override {
         for (auto &child: children) {
@@ -215,6 +215,65 @@ struct output_group_op : op {
 
     int group_index;
 };
+struct word_op : op {
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
 
+    std::string id() override { return "word_op"; }
+
+    ~word_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
+};
+struct expr_op : op {
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string id() override { return "expr_op"; }
+
+    ~expr_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
+};
+struct match_op : op {
+    bool eval(char *&first, char *last) override {
+        auto start = first;
+        for (auto &child: children) {
+            if (!child->eval(first, last)) {
+                first = start;
+                return false;
+            }
+        }
+        return true;
+    }
+
+    std::string id() override { return "match_op"; }
+
+    ~match_op() override {
+        for (auto &child: children) {
+            delete child;
+        }
+    }
+};
 
 #endif // LABB1_V4_OPS_H

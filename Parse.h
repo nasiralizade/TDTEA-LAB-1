@@ -22,36 +22,23 @@ public:
     Parse(IT first, IT last) : lexer(first, last) {}
 
     ~Parse() = default;
+    expr_op* parse_expr();
+    or_op* parse_or();
+    ignore_case_op* parse_ignore();
+    repeat_op* parse_repeat();
+    word_op* parse_word();
+    op* parse_char();
+    capture_group_op* parse_group();
+    output_group_op* parse_output_group();
+    match_op* parse_match();
+    count_op* parse_count();
+    bool match_from_any_pos(const std::string &input);
 
-    op *parse_expr();
 
-    op *parse_sub_expr();
-
-    op *parse_element();
-
-    /**
-     * operation   ::= <Operation> <Element>
-     * @param lhs  left hand side of the operation
-     * @return
-     */
-    op *parse_modifier(op *lhs);
-
-    /**
-     *
-     * @param c  character to be checked
-     * @return  true if the character is valid, false otherwise
-     */
-    bool is_valid_char(char c);
-
-    int get_number();
-
-    bool match_from_any_pos(std::string &input);
 
 private:
     Lexer lexer;
     std::string matchedSubstring;
-
-    op *handleSlash(op *lhs);
 
     void print_tree(op *root, const std::string &prefix = "", const std::string &children_prefix = "") {
         if (root == nullptr) {
